@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+.ipynb_checkpoints/
+
+# Env / secrets
+.env
+.env.*
+*.key
+*.pem
+credentials.json
+
+# macOS
+.DS_Store
+
+# Data / outputs (필요하면 화이트리스트로 풀어 쓰세요)
+data/raw/
+*.gpkg-journal
+*.parquet.tmp
+
+# OMC 운영 아티팩트
+.omc/
+!.omc/skills/
+
+# Node / wrangler
+node_modules/
+.wrangler/

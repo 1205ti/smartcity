@@ -1,0 +1,16 @@
+{
+  "name": "smartcity",
+  "private": true,
+  "version": "0.1.0",
+  "description": "스마트시티 수업 - KOSIS 통계 대시보드",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "deploy": "wrangler pages deploy public --project-name smartcity",
+    "dev": "wrangler pages dev public"
+  },
+  "devDependencies": {
+    "wrangler": "^4.131.1"
+  }
+}

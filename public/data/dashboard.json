@@ -1,0 +1,59 @@
+{
+  "updated": "샘플 데이터 (KOSIS 연동 전)",
+  "note": "배포 파이프라인 확인용 예시 값입니다. KOSIS MCP 연동 후 실제 통계로 교체합니다.",
+  "metrics": [
+    {
+      "id": "cpi",
+      "name": "소비자물가지수",
+      "unit": "2020=100",
+      "survey": "소비자물가조사",
+      "table": "소비자물가지수(2020=100)",
+      "url": "https://kosis.kr/statHtml/statHtml.do?orgId=101&tblId=DT_1J20003",
+      "series": [
+        {
+          "region": "전국",
+          "points": [
+            { "period": "2020", "value": 100.0 },
+            { "period": "2021", "value": 102.5 },
+            { "period": "2022", "value": 107.7 },
+            { "period": "2023", "value": 111.6 },
+            { "period": "2024", "value": 114.2 },
+            { "period": "2025", "value": 116.7 }
+          ]
+        },
+        {
+          "region": "서울특별시",
+          "points": [
+            { "period": "2020", "value": 100.0 },
+            { "period": "2021", "value": 102.7 },
+            { "period": "2022", "value": 108.1 },
+            { "period": "2023", "value": 112.3 },
+            { "period": "2024", "value": 115.1 },
+            { "period": "2025", "value": 117.8 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "precip",
+      "name": "연강수량",
+      "unit": "mm",
+      "survey": "기상연보",
+      "table": "지역별 연 강수량",
+      "url": "https://kosis.kr/statHtml/statHtml.do?orgId=101&tblId=DT_1B08024",
+      "series": [
+        {
+          "region": "서울특별시",
+          "points": [
+            { "period": "2019", "value": 1141.3 },
+            { "period": "2020", "value": 1700.4 },
+            { "period": "2021", "value": 1276.8 },
+            { "period": "2022", "value": 1547.3 },
+            { "period": "2023", "value": 1749.6 },
+            { "period": "2024", "value": 1398.2 }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>KOSIS 통계 대시보드 — 스마트시티</title>
+  <meta name="description" content="국가통계포털(KOSIS) 데이터를 불러와 지표를 비교하는 학습용 대시보드" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="KOSIS 통계 대시보드 — 스마트시티" />
+  <meta property="og:description" content="국가통계포털(KOSIS) 데이터를 불러와 지표를 비교하는 학습용 대시보드" />
+  <meta property="og:image" content="og-image.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <p class="eyebrow">스마트시티 수업</p>
+      <h1>KOSIS 통계 대시보드</h1>
+      <p class="lede">국가통계포털(KOSIS) 자료를 불러와 지표를 비교하는 학습용 대시보드입니다.</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="notice" aria-label="시범서비스 안내">
+      <p><strong>⚠️ 시범서비스 안내</strong></p>
+      <p>본 페이지는 국가통계포털(KOSIS) 기반 시범서비스 자료를 활용합니다. 통계 분석·해석 결과는 국가데이터처의 공식 입장이 아닌 참고용이니 활용 시 유의하시기 바랍니다.</p>
+    </section>
+
+    <section class="controls" aria-label="지표 선택">
+      <label for="metric">지표</label>
+      <select id="metric"></select>
+      <label for="region">지역</label>
+      <select id="region"></select>
+      <button id="reload" type="button">불러오기</button>
+      <span id="status" class="status" role="status" aria-live="polite"></span>
+    </section>
+
+    <section class="tiles" id="tiles" aria-label="요약 지표"></section>
+
+    <section class="panel">
+      <h2 id="chart-title">추이</h2>
+      <div class="chart-box">
+        <svg id="chart" viewBox="0 0 800 360" preserveAspectRatio="xMidYMid meet" role="img"
+             aria-labelledby="chart-title"></svg>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>원자료</h2>
+      <div class="table-box">
+        <table id="table">
+          <thead><tr><th scope="col">기간</th><th scope="col">값</th><th scope="col">전기 대비</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel source" id="source"></section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>데이터 출처: 국가통계포털 KOSIS · <a href="https://kosis.kr" rel="noopener">kosis.kr</a></p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
