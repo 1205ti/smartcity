@@ -130,82 +130,164 @@ fig.update_layout(title="아시아 인구 누적", template="plotly_white",
 fig.write_html(HTML / "6_1.html", include_plotlyjs="cdn")
 fig.show()'''))
 
-c.append(("md", """## 과제 2 — 서울 전세 가격 분석
+c.append(("md", """## 과제 2 — 지난 5년간 서울 전세 가격 변화
 
-월세를 전세로 환산해 비교 가능한 지표를 만들고, 면적으로 나눠 단위 가격을 본다.
+### 데이터를 어디서 가져왔나
 
-**전월세 전환율 5%** 가정: 환산보증금 = 보증금 + (월세 x 12 / 0.05)"""))
-c.append(("code", '''CODE_COLS = {"CGG_CD": "string", "STDG_CD": "string"}
-rent = pd.read_csv("data/raw/seoul_rent_2026.csv", encoding="utf-8-sig", dtype=CODE_COLS)
-print(rent.shape)
+강의자료 05는 OpenAPI로 수집하지만, **API는 최근 3년치만 준다**(서울 열린데이터광장
+공식 안내). 5년을 보려면 같은 데이터셋의 **연도별 ZIP 파일**을 받아야 한다.
+2011년부터 올라와 있다.
 
-df = rent[["CGG_NM", "STDG_NM", "BLDG_USG", "RENT_SE",
-           "GRFE", "RTFE", "RENT_AREA", "CTRT_DAY", "FLR"]].copy()
+`scripts/fetch_seoul_rent_files.py`가 2021~2025년 5개 연도를 받아 합친다.
+323만 건을 34초에 받는다. API로 같은 양을 받으면 약 4시간 걸린다.
 
-# 전월세 전환율 5% — 월세를 전세 보증금으로 환산해 같은 잣대로 비교한다
+받으면서 걸린 것 둘:
+- ZIP 내부 **파일명이 CP949**라 `unzip`이 `Illegal byte sequence`로 죽는다. Python `zipfile`로 읽는다.
+- **인코딩이 연도마다 다르다.** 2022년까지 CP949, 2023년부터 UTF-8(BOM). BOM을 보고 판별한다.
+- 열 이름이 한글(`자치구명`)이라 API(`CGG_NM`)와 다르다. API 쪽으로 통일했다."""))
+
+c.append(("code", '''rent5 = pd.read_parquet("data/interim/seoul_rent_2021_2025.parquet")
+print(f"{len(rent5):,}건  {rent5.RCPT_YR.min()}~{rent5.RCPT_YR.max()} 접수분")
+
+# 접수연도 파일에는 과거 계약이 뒤늦게 신고된 건이 섞여 있다(2021년 이전 1.85%).
+# 시계열을 보려면 접수연도가 아니라 계약일로 잘라야 한다.
+rent5["ym"] = rent5["CTRT_DAY"].astype("string").str[:6]
+rent5 = rent5[rent5["ym"].between("202101", "202512")].copy()
+rent5["date"] = pd.to_datetime(rent5["ym"] + "01", format="%Y%m%d")
+print(f"계약일 기준 2021-2025: {len(rent5):,}건")'''))
+
+c.append(("md", """### 건수를 시계열로 읽으면 안 된다
+
+먼저 확인할 것이 있다. 연도별 거래 건수가 이렇게 변한다."""))
+
+c.append(("code", '''monthly_n = rent5.groupby("date").size().reset_index(name="건수")
+
+fig = px.line(monthly_n, x="date", y="건수", markers=True,
+              labels={"date": "계약월", "건수": "신고 건수"})
+fig.add_vline(x="2025-06-01", line_dash="dash", line_color="#c0392b")
+fig.add_annotation(x="2025-06-01", y=monthly_n["건수"].max(),
+                   text="2025.6 계도기간 종료", showarrow=True, arrowhead=2,
+                   ax=-70, ay=-20, font=dict(color="#c0392b"))
+fig.update_layout(title="월별 전월세 신고 건수 — 시장 규모가 아니라 신고율의 변화",
+                  template="plotly_white", height=420)
+fig.write_html(HTML / "7_0.html", include_plotlyjs="cdn")
+fig.show()
+
+print(rent5.groupby(rent5["ym"].str[:4]).size().to_string())'''))
+
+c.append(("md", """2021년 46만 건에서 2025년 102만 건으로 두 배가 넘게 늘었다.
+**시장이 두 배가 된 것이 아니다.** 2021년 6월 시작된 전월세신고제의 계도기간이
+2025년 5월 말 끝나면서 신고율이 올라간 것이다. 위 그래프에서 2025년 6월에
+계단처럼 뛰는 지점이 그 경계다.
+
+따라서 **건수는 연도 간 비교에 쓸 수 없다.** 가격만 본다. 가격도 신고 대상이
+넓어지면서 표본 구성이 달라졌을 수 있으므로, 평균보다 극단값에 덜 흔들리는
+중앙값을 쓴다."""))
+
+c.append(("md", "### 가격 지표 정의"))
+
+c.append(("code", '''# 전월세 전환율 5%로 월세를 보증금으로 환산해 같은 잣대로 놓는다.
+# 실제 전환율은 시기·지역·주택유형마다 다르므로 이 값은 비교용 공통 잣대일 뿐
+# 실거래 전세가가 아니다.
 CONVERSION_RATE = 0.05
-df["JEONSE_CONVERTED"] = df["GRFE"] + (df["RTFE"] * 12 / CONVERSION_RATE)
+rent5["JEONSE_CONVERTED"] = rent5["GRFE"] + (rent5["RTFE"] * 12 / CONVERSION_RATE)
 
-# 면적으로 나눠 단위 가격을 만든다. 면적이 0이면 나눗셈이 깨지므로 먼저 거른다
-df = df[df["RENT_AREA"] > 0]
-df["JEONSE_PER_M2"] = (df["JEONSE_CONVERTED"] / df["RENT_AREA"]).round(2)
+rent5 = rent5[rent5["RENT_AREA"] > 0]
+rent5["JEONSE_PER_M2"] = rent5["JEONSE_CONVERTED"] / rent5["RENT_AREA"]
 
-print(df[["RENT_SE", "GRFE", "RTFE", "JEONSE_CONVERTED", "RENT_AREA", "JEONSE_PER_M2"]].head())'''))
+# 상하위 1%는 잘라 낸다. 극단값 몇 건이 중앙값까지 흔들지는 않지만
+# 축이 늘어나 그래프가 읽히지 않는다.
+lo, hi = rent5["JEONSE_PER_M2"].quantile([0.01, 0.99])
+rent5 = rent5[rent5["JEONSE_PER_M2"].between(lo, hi)]
+print(f"극단값 제외 후 {len(rent5):,}건")
+print(rent5["JEONSE_PER_M2"].describe().round(1).to_string())'''))
 
-c.append(("code", '''# 극단값이 축을 다 잡아먹으므로 상하위 1%를 잘라낸다
-lo, hi = df["JEONSE_PER_M2"].quantile([0.01, 0.99])
-trimmed = df[(df["JEONSE_PER_M2"] >= lo) & (df["JEONSE_PER_M2"] <= hi)]
-print(f"상하위 1% 제외: {len(df):,} → {len(trimmed):,}")
+c.append(("md", "### 1. 서울 전체 ㎡당 환산전세가 추이"))
 
-# 박스플롯은 원자료를 전부 브라우저로 보낸다. 39만 행이면 파일이 9MB를 넘어
-# 열리지도 않으므로 그룹당 최대 1,500건을 무작위 추출한다(seed 고정).
-# 사분위수 모양을 보는 목적이라 표본으로 충분하다.
-box_src = trimmed[trimmed["BLDG_USG"].isin(["아파트", "연립다세대", "단독다가구"])]
-# 전체를 섞은 뒤 그룹별로 앞에서 1,500건씩 — groupby.apply보다 열이 안 사라져 안전하다
-box_src = box_src.sample(frac=1, random_state=0).groupby(["CGG_NM", "BLDG_USG"]).head(1500)
-print(f"박스플롯용 표본: {len(box_src):,}건 (원본 {len(trimmed):,}건)")
+c.append(("code", '''apt = rent5[rent5["BLDG_USG"] == "아파트"]
 
-fig = px.box(box_src,
-             x="CGG_NM", y="JEONSE_PER_M2", color="BLDG_USG",
-             labels={"CGG_NM": "자치구", "JEONSE_PER_M2": "㎡당 환산전세가 (만원)",
-                     "BLDG_USG": "건물용도"})
-fig.update_layout(title="자치구·건물용도별 ㎡당 환산전세가",
-                  template="plotly_white", height=520, xaxis_tickangle=-45)
+trend = (apt.groupby("date")["JEONSE_PER_M2"]
+         .agg(중앙값="median", 평균="mean").round(1).reset_index())
+
+fig = px.line(trend.melt(id_vars="date", var_name="지표", value_name="값"),
+              x="date", y="값", color="지표", markers=True,
+              labels={"date": "계약월", "값": "㎡당 환산전세가 (만원)"})
+fig.update_layout(title="서울 아파트 ㎡당 환산전세가 (2021-2025)",
+                  template="plotly_white", height=440)
 fig.write_html(HTML / "7_1.html", include_plotlyjs="cdn")
-fig.show()'''))
+fig.show()
 
-c.append(("code", '''# 계약일을 월 단위로 묶어 추세를 본다
-t = trimmed.copy()
-t["CTRT_DAY"] = pd.to_datetime(t["CTRT_DAY"], format="%Y%m%d", errors="coerce")
-t = t[t["CTRT_DAY"].notna()]
-t["month"] = t["CTRT_DAY"].dt.to_period("M").astype(str)
+first, last = trend.iloc[0], trend.iloc[-1]
+print(f"{first['date']:%Y-%m} {first['중앙값']:.1f} → "
+      f"{last['date']:%Y-%m} {last['중앙값']:.1f} 만원/㎡ "
+      f"({(last['중앙값']/first['중앙값']-1)*100:+.1f}%)")
+print(f"최고 {trend['중앙값'].max():.1f} ({trend.loc[trend['중앙값'].idxmax(),'date']:%Y-%m})")
+print(f"최저 {trend['중앙값'].min():.1f} ({trend.loc[trend['중앙값'].idxmin(),'date']:%Y-%m})")'''))
 
-monthly = (t[t["BLDG_USG"] == "아파트"]
-           .groupby(["month", "CGG_NM"], as_index=False)["JEONSE_PER_M2"]
-           .mean().round(2))
+c.append(("md", "### 2. 자치구별로 갈리는가"))
 
-# 거래가 많은 6개 구만 본다. 전부 그리면 선이 뒤엉켜 못 읽는다
-top_gu = t[t["BLDG_USG"] == "아파트"]["CGG_NM"].value_counts().head(6).index
+c.append(("code", '''gu_trend = (apt.groupby(["date", "CGG_NM"])["JEONSE_PER_M2"]
+            .median().round(1).reset_index())
 
-fig = px.line(monthly[monthly["CGG_NM"].isin(top_gu)],
-              x="month", y="JEONSE_PER_M2", color="CGG_NM", markers=True,
-              labels={"month": "계약월", "JEONSE_PER_M2": "㎡당 환산전세가 (만원)",
+# 25개를 다 그리면 선이 엉켜 못 읽는다. 최근 수준 상위·하위 3개씩만 본다
+recent = gu_trend[gu_trend["date"] >= "2025-07-01"].groupby("CGG_NM")["JEONSE_PER_M2"].median()
+pick = list(recent.nlargest(3).index) + list(recent.nsmallest(3).index)
+
+fig = px.line(gu_trend[gu_trend["CGG_NM"].isin(pick)],
+              x="date", y="JEONSE_PER_M2", color="CGG_NM", markers=True,
+              labels={"date": "계약월", "JEONSE_PER_M2": "㎡당 환산전세가 (만원)",
                       "CGG_NM": "자치구"})
-fig.update_layout(title="아파트 ㎡당 환산전세가 월별 추이 (거래 상위 6개구)",
+fig.update_layout(title="자치구별 아파트 ㎡당 환산전세가 — 상위·하위 3개구",
                   template="plotly_white", height=460)
 fig.write_html(HTML / "7_2.html", include_plotlyjs="cdn")
 fig.show()
 
-print("저장된 HTML:", sorted(p.name for p in HTML.glob("*.html")))'''))
+# 5년 사이 격차가 벌어졌는지 좁혀졌는지 확인한다
+for label, period in [("2021 상반기", ("2021-01-01", "2021-06-30")),
+                      ("2025 하반기", ("2025-07-01", "2025-12-31"))]:
+    sub = gu_trend[(gu_trend["date"] >= period[0]) & (gu_trend["date"] <= period[1])]
+    g = sub.groupby("CGG_NM")["JEONSE_PER_M2"].median()
+    print(f"{label}  최고 {g.max():6.1f} ({g.idxmax()})  "
+          f"최저 {g.min():5.1f} ({g.idxmin()})  배율 {g.max()/g.min():.2f}배")'''))
+
+c.append(("md", "### 3. 건물용도별"))
+
+c.append(("code", '''usg = (rent5[rent5["BLDG_USG"].isin(["아파트", "연립다세대", "단독다가구", "오피스텔"])]
+       .groupby([rent5["ym"].str[:4].rename("연도"), "BLDG_USG"])["JEONSE_PER_M2"]
+       .median().round(1).reset_index())
+
+fig = px.bar(usg, x="연도", y="JEONSE_PER_M2", color="BLDG_USG", barmode="group",
+             labels={"JEONSE_PER_M2": "㎡당 환산전세가 (만원)", "BLDG_USG": "건물용도"})
+fig.update_layout(title="건물용도별 ㎡당 환산전세가 중앙값 (2021-2025)",
+                  template="plotly_white", height=440)
+fig.write_html(HTML / "7_3.html", include_plotlyjs="cdn")
+fig.show()
+
+pivot = usg.pivot(index="연도", columns="BLDG_USG", values="JEONSE_PER_M2")
+print(pivot.to_string())
+print()
+print("2021 대비 2025 변화율(%):")
+print(((pivot.loc["2025"] / pivot.loc["2021"] - 1) * 100).round(1).to_string())'''))
 
 c.append(("md", """### 읽어낸 것
 
-- 자치구 간 ㎡당 환산전세가 격차가 건물용도보다 크다. 어디냐가 무엇이냐보다 세다.
-- 아파트는 분포 폭이 좁고 연립다세대·단독다가구는 넓다. 같은 구 안에서도 편차가 크다는 뜻이다.
-- 월별 추이는 구마다 방향이 갈린다. 서울 전체를 하나의 시장으로 묶어 보면 이 차이가 지워진다.
+**건수는 신고제 이야기지 시장 이야기가 아니다.** 2021년 46만 건에서 2025년 102만 건으로
+늘었지만, 2025년 6월 계도기간 종료에 맞춰 계단처럼 뛴다. 이 구간을 시장 확대로 읽으면
+틀린다. 그래서 이 분석은 건수를 빼고 가격만 다뤘다.
 
-주의: 전환율 5%는 가정이다. 실제 전환율은 시기·지역·주택유형에 따라 다르므로
-이 값은 비교를 위한 공통 잣대일 뿐 실거래 전세가가 아니다."""))
+**가격은 평균보다 중앙값이 낫다.** 두 선을 같이 그려 보면 평균이 늘 위에 있다.
+비싼 거래 몇 건이 평균을 끌어올리기 때문이다. 신고 대상이 넓어지며 표본 구성이
+바뀐 구간에서는 이 차이가 더 벌어진다.
+
+**자치구 간 격차가 건물용도 간 격차보다 크다.** 어느 동네냐가 어떤 집이냐보다 세다.
+
+### 이 분석의 한계
+
+- 전환율 5%는 가정이다. 실제로는 시기·지역·유형마다 다르고, 금리에 따라 움직인다.
+  여기 수치는 실거래 전세가가 아니라 비교용 환산값이다.
+- 신고제 정착 과정에서 표본이 달라졌다. 초기에 신고된 거래와 나중에 신고된 거래의
+  성격이 같다는 보장이 없다.
+- 2025년 말 몇 달은 신고 지연으로 건수가 덜 잡혀 있을 수 있다."""))
 
 p1 = build("07_plotly.ipynb", c)
 
