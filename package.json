@@ -7,8 +7,9 @@
     "node": ">=22"
   },
   "scripts": {
-    "deploy": "wrangler pages deploy public --project-name smartcity",
-    "dev": "wrangler pages dev public"
+    "deploy": "wrangler deploy",
+    "dev": "wrangler pages dev public",
+    "preview": "wrangler dev"
   },
   "devDependencies": {
     "wrangler": "^4.131.1"

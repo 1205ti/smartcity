@@ -1,5 +1,7 @@
 # smartcity — 관악캠퍼스 주변 수문 기반시설 통계
 
+**배포 주소: https://smartcity-apa.pages.dev**
+
 > KOSIS 국가통계포털 자료로 본 관악구의 강우 · 토지피복 · 하수 인프라 · 침수 피해
 
 ![대표 이미지](public/og-image.png)
@@ -61,7 +63,7 @@ Cloudflare Pages에 정적 파일을 그대로 올립니다. Node 22 이상이 �
 
 ```bash
 npm run dev      # 로컬 미리보기
-npm run deploy   # 배포
+npm run deploy   # 배포 → https://smartcity-apa.pages.dev
 ```
 
 ## 데이터 출처
