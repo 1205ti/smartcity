@@ -4,7 +4,7 @@
 
 > KOSIS 국가통계포털 자료로 본 관악구의 강우 · 토지피복 · 하수 인프라 · 침수 피해
 
-![대표 이미지](public/og-image.png)
+![대표 이미지](deploy/site/og-image.png)
 
 스마트시티 수업 과제 저장소입니다. 국가통계포털(KOSIS)에서 **관악구 단위로 실제 수록된
 통계만** 모아 대시보드로 만들고, Cloudflare Pages로 배포합니다.
@@ -41,7 +41,7 @@ KOSIS는 시군구 단위 집계 통계입니다. 캠퍼스 안 개별 건물 �
 ## 구성
 
 ```
-public/
+deploy/site/
 ├── index.html        구조 및 레이아웃
 ├── styles.css        테마 및 스타일 (라이트/다크 자동 전환)
 ├── app.js            동작 로직 — 데이터 로드, SVG 차트, 표 렌더링

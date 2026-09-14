@@ -23,8 +23,14 @@ jupyter lab
 
 ## 폴더 규칙
 
-- `data/raw/` — 내려받은 원본. 건드리지 않는다.
-- `data/processed/` — 전처리 결과
-- `outputs/figures/` — 저장한 그림·HTML
+| 폴더 | 용도 | git |
+| --- | --- | --- |
+| `data/raw/` | 내려받은 원본. 읽기만 한다 | 제외 |
+| `data/interim/` | 전처리 중간 산출물 | 제외 |
+| `data/processed/` | 분석에 바로 쓰는 결과 | 커밋 |
+| `outputs/figures/` | 그림 (PNG) | 커밋 |
+| `outputs/html/` | 인터랙티브 결과 | 커밋 |
+| `deploy/site/` | 웹에 공개되는 것만 | 커밋 |
 
-`data/raw/`는 용량 때문에 git에서 제외한다. 내려받는 방법은 각 노트북 첫 셀에 적는다.
+원본을 덮어쓰면 되돌릴 수 없다. `raw`는 읽고, 쓰는 것은 `interim`·`processed`에 한다.
+내려받는 방법은 각 노트북 첫 셀에 적는다.

@@ -26,5 +26,5 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          # public/ 폴더의 정적 파일을 그대로 올린다. 빌드 과정은 없다.
-          command: pages deploy public --project-name=smartcity
+          # deploy/site/ 의 정적 파일을 그대로 올린다. 빌드 과정은 없다.
+          command: pages deploy deploy/site --project-name=smartcity

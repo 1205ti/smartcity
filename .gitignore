@@ -17,23 +17,20 @@ credentials.json
 # macOS
 .DS_Store
 
-# Data / outputs (필요하면 화이트리스트로 풀어 쓰세요)
-data/raw/
-*.gpkg-journal
-*.parquet.tmp
+# Node / wrangler
+node_modules/
+.wrangler/
 
 # OMC 운영 아티팩트
 .omc/
 !.omc/skills/
 
-# Node / wrangler
-node_modules/
-.wrangler/
-
-.dev.vars*
-!.dev.vars.example
-!.env.example
-
-# 강의 실습 산출물은 커밋한다 — 결과를 바로 볼 수 있어야 하므로.
-# 다만 원본 데이터는 용량이 커서 제외한다 (내려받는 방법은 각 노트북 첫 셀에).
+# ── 데이터 ────────────────────────────────────────────────
+# 원본과 중간 산출물은 용량이 커서 커밋하지 않는다.
+# 내려받거나 만드는 방법은 각 노트북 첫 셀과 scripts/ 에 있다.
 data/raw/
+data/interim/
+
+# data/processed/ 는 커밋한다 — 분석 결과라 바로 볼 수 있어야 한다.
+# 다만 50MB를 넘는 것은 개별로 제외한다.
+data/processed/*.parquet

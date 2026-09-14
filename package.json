@@ -2,14 +2,13 @@
   "name": "smartcity",
   "private": true,
   "version": "0.1.0",
-  "description": "스마트시티 수업 - KOSIS 통계 대시보드",
+  "description": "스마트도시데이터분석 수업 과제 - 관악캠퍼스 수문 기반시설 통계",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
-    "deploy": "wrangler deploy",
-    "dev": "wrangler pages dev public",
-    "preview": "wrangler dev"
+    "dev": "wrangler pages dev deploy/site",
+    "deploy": "wrangler pages deploy deploy/site --project-name smartcity"
   },
   "devDependencies": {
     "wrangler": "^4.131.1"

@@ -25,13 +25,36 @@
   PATH="/opt/homebrew/opt/node@22/bin:$PATH" ./node_modules/.bin/wrangler ...
   ```
 
+## 폴더 구조
+
+```
+data/raw/         내려받은 원본. 절대 수정하지 않는다. (git 제외)
+data/interim/     전처리 중간 산출물. 언제든 다시 만들 수 있다. (git 제외)
+data/processed/   분석에 바로 쓰는 결과물. 작으면 커밋한다.
+notebooks/        강의별 실습 노트북
+scripts/          수집·변환 스크립트. 노트북에서 반복되는 것을 옮겨 둔다.
+outputs/figures/  그림 (PNG)
+outputs/html/     인터랙티브 결과 (HTML)
+deploy/site/      Cloudflare Pages에 올라가는 정적 파일. 여기만 배포된다.
+docs/course/      노션 강의자료 사본 (수정 금지)
+docs/references/  디자인·사례 레퍼런스
+logs/             작업 로그
+```
+
+**원본 → 중간 → 결과**를 섞지 않는다. `data/raw/`를 덮어쓰면 되돌릴 수 없다.
+분석 코드는 `raw`를 읽어 `interim`이나 `processed`에 쓴다.
+
+**분석물과 배포물을 섞지 않는다.** `outputs/`는 분석 결과 보관용이고,
+`deploy/site/`는 웹에 공개되는 것이다. 공개할 것만 골라 옮긴다.
+
 ## 배포
 
 `main`에 push하면 GitHub Actions가 Cloudflare Pages로 올린다. 수동 배포는 필요 없다.
 
 - 배포 주소: https://smartcity-apa.pages.dev
-- 정적 파일은 `public/` 아래에만 둔다. 빌드 과정은 없다.
+- 올라가는 것은 `deploy/site/` 뿐이다. 빌드 과정은 없다.
 - 워크플로: `.github/workflows/deploy.yml`
+- 로컬 확인: `npm run dev`
 
 ## 커밋
 
@@ -62,6 +85,7 @@
 - 첫 셀에 **데이터 출처와 내려받는 방법**을 적는다. 다른 컴퓨터에서 재현 가능해야 한다.
 - 한글 그래프는 `import koreanize_matplotlib` 한 줄이면 된다.
 - 큰 원본 데이터는 커밋하지 않는다. 내려받는 코드를 대신 남긴다.
+- 원본은 `data/raw/`에서 읽기만 한다. 결과는 `data/interim/` 또는 `data/processed/`에 쓴다.
 
 ## 코드 스타일
 
