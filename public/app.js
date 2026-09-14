@@ -18,7 +18,8 @@ const DATA_URL = 'data/dashboard.json';
 /** 화면 요소 참조를 한곳에 모아둔다. */
 const el = {
   metric: document.getElementById('metric'),
-  region: document.getElementById('region'),
+  groupnav: document.getElementById('groupnav'),
+  note: document.getElementById('metric-note'),
   reload: document.getElementById('reload'),
   status: document.getElementById('status'),
   tiles: document.getElementById('tiles'),
@@ -60,10 +61,12 @@ function changeRate(current, previous) {
 }
 
 /** 증감률을 "+1.2%" 형태의 문자열과 방향 클래스로 바꾼다. */
-function deltaParts(rate) {
+function deltaParts(rate, polarity) {
   if (rate === null) return { text: '—', cls: 'flat' };
   const sign = rate > 0 ? '+' : '';
-  const cls = rate > 0.05 ? 'up' : rate < -0.05 ? 'down' : 'flat';
+  // polarity 'harm' 인 지표만 증가를 경고색으로 칠한다.
+  // 강수량·면적처럼 좋고 나쁨이 없는 지표는 중립색으로 둔다.
+  const cls = polarity !== 'harm' ? 'flat' : rate > 0.05 ? 'up' : rate < -0.05 ? 'down' : 'flat';
   return { text: `${sign}${rate.toFixed(1)}%`, cls };
 }
 
@@ -78,10 +81,10 @@ async function loadData() {
     const res = await fetch(DATA_URL, { cache: 'no-cache' });
     if (!res.ok) throw new Error(`데이터를 불러오지 못했습니다 (HTTP ${res.status})`);
     dataset = await res.json();
-    fillSelect(el.metric, dataset.metrics.map((m) => ({ value: m.id, label: m.name })));
-    syncRegionOptions();
+    buildGroupNav();
+    syncMetricOptions();
     render();
-    setStatus(`기준: ${dataset.updated}`, false);
+    setStatus(`${dataset.source} · ${dataset.updated}`, false);
   } catch (err) {
     setStatus(err.message, false);
     el.tiles.innerHTML = `<p class="tile">데이터를 표시할 수 없습니다. ${err.message}</p>`;
@@ -101,23 +104,39 @@ function fillSelect(select, items) {
   if (items.some((i) => i.value === prev)) select.value = prev;
 }
 
-/** 선택된 지표가 가진 지역 목록으로 지역 선택 메뉴를 갱신한다. */
-function syncRegionOptions() {
-  const metric = currentMetric();
-  if (!metric) return;
-  fillSelect(el.region, metric.series.map((s) => ({ value: s.region, label: s.region })));
+/** 현재 선택된 그룹. 처음에는 첫 그룹을 연다. */
+let activeGroup = null;
+
+/** 데이터에 들어 있는 그룹으로 탭 버튼을 만든다. */
+function buildGroupNav() {
+  const groups = [...new Set(dataset.metrics.map((m) => m.group))];
+  activeGroup = groups.includes(activeGroup) ? activeGroup : groups[0];
+  el.groupnav.innerHTML = groups
+    .map((g) => `<button type="button" data-group="${g}"` +
+                `${g === activeGroup ? ' class="on"' : ''}>${g}</button>`)
+    .join('');
+  el.groupnav.querySelectorAll('button').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      activeGroup = btn.dataset.group;
+      buildGroupNav();
+      syncMetricOptions();
+      render();
+    });
+  });
+}
+
+/** 선택된 그룹에 속한 지표로 선택 메뉴를 채운다. */
+function syncMetricOptions() {
+  const items = dataset.metrics
+    .filter((m) => m.group === activeGroup)
+    .map((m) => ({ value: m.id, label: m.name }));
+  fillSelect(el.metric, items);
 }
 
 /** 현재 선택된 지표 객체 */
 function currentMetric() {
-  return dataset?.metrics.find((m) => m.id === el.metric.value) ?? dataset?.metrics[0];
-}
-
-/** 현재 선택된 계열(지표 × 지역) */
-function currentSeries() {
-  const metric = currentMetric();
-  if (!metric) return null;
-  return metric.series.find((s) => s.region === el.region.value) ?? metric.series[0];
+  const inGroup = dataset?.metrics.filter((m) => m.group === activeGroup) ?? [];
+  return inGroup.find((m) => m.id === el.metric.value) ?? inGroup[0];
 }
 
 /* ---------------------------------------------------------------------------
@@ -127,25 +146,25 @@ function currentSeries() {
 /** 타일 · 차트 · 표 · 출처를 한 번에 다시 그린다. */
 function render() {
   const metric = currentMetric();
-  const series = currentSeries();
-  if (!metric || !series) return;
+  if (!metric) return;
 
-  el.chartTitle.textContent = `${metric.name} — ${series.region} 추이 (${metric.unit})`;
-  renderTiles(metric, series);
-  renderChart(series.points, metric.unit);
-  renderTable(series.points, metric.unit);
+  el.chartTitle.textContent = `${metric.name} 추이 (${metric.unit})`;
+  el.note.textContent = metric.note || '';
+  renderTiles(metric);
+  renderChart(metric.points, metric.unit, metric.chart);
+  renderTable(metric.points, metric.unit, metric.polarity);
   renderSource(metric);
 }
 
 /** 최신값 · 전기 대비 · 기간 내 최고/최저를 요약 타일로 보여준다. */
-function renderTiles(metric, series) {
-  const pts = series.points;
+function renderTiles(metric) {
+  const pts = metric.points;
   const last = pts[pts.length - 1];
   const prev = pts[pts.length - 2];
   const values = pts.map((p) => p.value);
   const max = pts[values.indexOf(Math.max(...values))];
   const min = pts[values.indexOf(Math.min(...values))];
-  const delta = deltaParts(changeRate(last.value, prev?.value));
+  const delta = deltaParts(changeRate(last.value, prev?.value), metric.polarity);
 
   el.tiles.innerHTML = `
     <dl class="tile">
@@ -162,13 +181,13 @@ function renderTiles(metric, series) {
       <dd>${fmt(min.value, metric.unit)}</dd>
     </dl>
     <dl class="tile">
-      <dt>관측 구간</dt>
+      <dt>수록 구간</dt>
       <dd>${pts[0].period} – ${last.period}<span class="delta flat">${pts.length}개 시점</span></dd>
     </dl>`;
 }
 
 /** 꺾은선 차트를 SVG로 직접 그린다. */
-function renderChart(points, unit) {
+function renderChart(points, unit, kind) {
   const W = 800, H = 360;
   const pad = { top: 20, right: 24, bottom: 44, left: 68 };
   const innerW = W - pad.left - pad.right;
@@ -176,10 +195,11 @@ function renderChart(points, unit) {
 
   const values = points.map((p) => p.value);
   // y축 범위에 5% 여백을 줘서 선이 테두리에 붙지 않게 한다.
-  const rawMin = Math.min(...values);
+  const bars = kind === 'bar';
+  const rawMin = bars ? Math.min(0, ...values) : Math.min(...values);
   const rawMax = Math.max(...values);
   const span = (rawMax - rawMin) || Math.abs(rawMax) || 1;
-  const yMin = rawMin - span * 0.05;
+  const yMin = bars ? rawMin : rawMin - span * 0.05;
   const yMax = rawMax + span * 0.05;
 
   const x = (i) => pad.left + (points.length === 1 ? innerW / 2 : (i / (points.length - 1)) * innerW);
@@ -202,6 +222,35 @@ function renderChart(points, unit) {
       ? `<text x="${x(i)}" y="${H - pad.bottom + 20}" text-anchor="middle">${p.period}</text>`
       : ''))
     .join('');
+
+  if (bars) {
+    // 수록 연도가 띄엄띄엄한 계열은 꺾은선으로 이으면 없는 추세를 만들어낸다.
+    const slot = innerW / points.length;
+    const w = Math.min(46, slot * 0.6);
+    const rects = points
+      .map((p, i) => {
+        const cx = pad.left + slot * (i + 0.5);
+        const top = y(p.value);
+        const h = Math.max(1, pad.top + innerH - top);
+        return `<rect class="series-bar" x="${(cx - w / 2).toFixed(1)}" y="${top.toFixed(1)}" `
+             + `width="${w.toFixed(1)}" height="${h.toFixed(1)}" rx="3">`
+             + `<title>${p.period}: ${fmt(p.value, unit)}</title></rect>`;
+      })
+      .join('');
+    const barLabels = points
+      .map((p, i) => `<text x="${(pad.left + slot * (i + 0.5)).toFixed(1)}" `
+                   + `y="${H - pad.bottom + 20}" text-anchor="middle">${p.period}</text>`)
+      .join('');
+    el.chart.innerHTML = `
+      <g class="grid">${gridLines.join('')}</g>
+      ${rects}
+      <g class="axis">
+        <line x1="${pad.left}" y1="${pad.top + innerH}" x2="${W - pad.right}" y2="${pad.top + innerH}" />
+        ${yLabels.join('')}
+        ${barLabels}
+      </g>`;
+    return;
+  }
 
   const line = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(p.value).toFixed(1)}`).join(' ');
   const area = `${line} L${x(points.length - 1).toFixed(1)},${(pad.top + innerH).toFixed(1)} `
@@ -232,12 +281,12 @@ function round(v) {
 }
 
 /** 원자료를 표로 보여준다. 최근 시점이 위로 오도록 뒤집는다. */
-function renderTable(points, unit) {
+function renderTable(points, unit, polarity) {
   el.tbody.innerHTML = points
     .map((p, i) => ({ p, prev: points[i - 1] }))
     .reverse()
     .map(({ p, prev }) => {
-      const d = deltaParts(changeRate(p.value, prev?.value));
+      const d = deltaParts(changeRate(p.value, prev?.value), polarity);
       return `<tr><td>${p.period}</td><td>${fmt(p.value, unit)}</td>`
            + `<td class="delta ${d.cls}">${d.text}</td></tr>`;
     })
@@ -262,8 +311,7 @@ function setStatus(text, busy) {
  * 이벤트 연결
  * ------------------------------------------------------------------------- */
 
-el.metric.addEventListener('change', () => { syncRegionOptions(); render(); });
-el.region.addEventListener('change', render);
+el.metric.addEventListener('change', render);
 el.reload.addEventListener('click', loadData);
 
 loadData();

@@ -145,3 +145,25 @@ tbody tr:last-child td { border-bottom: none; }
   .controls { gap: 8px; }
   .status { margin-left: 0; width: 100%; }
 }
+
+/* 자료 범위 설명 · 그룹 탭 · 보조 설명 */
+.scope, .gap { background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); }
+.scope h2, .gap h2 { margin: 0 0 8px; font-size: 1rem; }
+.scope p, .gap p { margin: 0; color: var(--ink-soft); font-size: .92rem; }
+.gap ul { margin: 0 0 10px; padding-left: 18px; color: var(--ink-soft); font-size: .92rem; }
+.gap li { margin-bottom: 4px; }
+.gap li strong { color: var(--ink); }
+
+.groupnav { display: flex; flex-wrap: wrap; gap: 8px; }
+.groupnav button {
+  background: var(--surface); color: var(--ink-soft);
+  border: 1px solid var(--border); font-weight: 600; font-size: .88rem;
+  padding: 8px 14px; border-radius: 999px;
+}
+.groupnav button:hover { filter: none; border-color: var(--accent); color: var(--accent); }
+.groupnav button.on { background: var(--accent); color: #fff; border-color: transparent; }
+
+.metric-note { margin: 10px 0 0; font-size: .85rem; color: var(--ink-soft); }
+.metric-note:empty { display: none; }
+.series-bar { fill: var(--accent); }

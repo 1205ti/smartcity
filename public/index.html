@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>KOSIS 통계 대시보드 — 스마트시티</title>
-  <meta name="description" content="국가통계포털(KOSIS) 데이터를 불러와 지표를 비교하는 학습용 대시보드" />
+  <title>관악캠퍼스 수문 기반시설 통계</title>
+  <meta name="description" content="KOSIS 국가통계포털 자료로 본 관악구의 강우·토지피복·하수 인프라·침수 피해" />
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="KOSIS 통계 대시보드 — 스마트시티" />
-  <meta property="og:description" content="국가통계포털(KOSIS) 데이터를 불러와 지표를 비교하는 학습용 대시보드" />
+  <meta property="og:title" content="관악캠퍼스 수문 기반시설 통계" />
+  <meta property="og:description" content="KOSIS 국가통계포털 자료로 본 관악구의 강우·토지피복·하수 인프라·침수 피해" />
   <meta property="og:image" content="og-image.png" />
   <meta name="twitter:card" content="summary_large_image" />
   <link rel="stylesheet" href="styles.css" />
@@ -15,24 +15,38 @@
 <body>
   <header class="site-header">
     <div class="wrap">
-      <p class="eyebrow">스마트시티 수업</p>
-      <h1>KOSIS 통계 대시보드</h1>
-      <p class="lede">국가통계포털(KOSIS) 자료를 불러와 지표를 비교하는 학습용 대시보드입니다.</p>
+      <p class="eyebrow">스마트시티 수업 · 수문 기반시설</p>
+      <h1>관악캠퍼스 주변 수문 통계</h1>
+      <p class="lede">
+        국가통계포털(KOSIS)에서 관악구 단위로 실제 수록된 통계만 모았습니다.
+        비가 얼마나 오는지, 땅이 어떻게 덮여 있는지, 하수관이 얼마나 깔려 있는지,
+        그래서 침수 피해가 어땠는지를 순서대로 봅니다.
+      </p>
     </div>
   </header>
 
   <main class="wrap">
     <section class="notice" aria-label="시범서비스 안내">
       <p><strong>⚠️ 시범서비스 안내</strong></p>
-      <p>본 페이지는 국가통계포털(KOSIS) 기반 시범서비스 자료를 활용합니다. 통계 분석·해석 결과는 국가데이터처의 공식 입장이 아닌 참고용이니 활용 시 유의하시기 바랍니다.</p>
+      <p>본 서비스는 국가통계포털(KOSIS) 기반 시범서비스입니다. 생성형 AI의 특성상 답변에 오류나 부정확한 내용이 포함될 수 있으며, 통계 분석·해석 결과는 국가데이터처의 공식 입장이 아닌 참고용이니 활용 시 유의하시기 바랍니다.</p>
     </section>
+
+    <section class="scope" aria-label="자료 범위">
+      <h2>이 대시보드가 다루는 범위</h2>
+      <p>
+        KOSIS는 <strong>시군구 단위 집계 통계</strong>입니다. 캠퍼스 안 개별 건물 외곽선이나
+        도로 선형 같은 공간 데이터는 들어 있지 않습니다. 그래서 여기서는 KOSIS가 실제로
+        답할 수 있는 <strong>관악구 단위 지표</strong>만 싣고, 건물·도로 형상이 필요한 부분은
+        별도 공간데이터(VWorld·국가공간정보포털)로 넘깁니다.
+      </p>
+    </section>
+
+    <nav class="groupnav" id="groupnav" aria-label="지표 그룹"></nav>
 
     <section class="controls" aria-label="지표 선택">
       <label for="metric">지표</label>
       <select id="metric"></select>
-      <label for="region">지역</label>
-      <select id="region"></select>
-      <button id="reload" type="button">불러오기</button>
+      <button id="reload" type="button">다시 불러오기</button>
       <span id="status" class="status" role="status" aria-live="polite"></span>
     </section>
 
@@ -44,24 +58,39 @@
         <svg id="chart" viewBox="0 0 800 360" preserveAspectRatio="xMidYMid meet" role="img"
              aria-labelledby="chart-title"></svg>
       </div>
+      <p class="metric-note" id="metric-note"></p>
     </section>
 
     <section class="panel">
       <h2>원자료</h2>
       <div class="table-box">
         <table id="table">
-          <thead><tr><th scope="col">기간</th><th scope="col">값</th><th scope="col">전기 대비</th></tr></thead>
+          <thead><tr><th scope="col">시점</th><th scope="col">값</th><th scope="col">전기 대비</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
     </section>
 
     <section class="panel source" id="source"></section>
+
+    <section class="panel gap">
+      <h2>KOSIS로 채울 수 없는 부분</h2>
+      <ul>
+        <li><strong>건물·도로 형상</strong> — VWorld 건물통합정보, 도로중심선, 국가공간정보포털, 도로명주소 건물DB</li>
+        <li><strong>하천 수위·유량</strong> — 한강홍수통제소 도림천 수위 관측</li>
+        <li><strong>시간 단위 강우</strong> — 기상청 AWS 관악 지점(KOSIS는 연 단위 집계만 수록)</li>
+        <li><strong>빗물받이·하수관로 위치</strong> — 서울 열린데이터광장</li>
+      </ul>
+      <p>
+        관악캠퍼스는 도림천 상류 유역에 해당합니다. 위 공간데이터로 건물·도로를 그리고,
+        이 대시보드의 관악구 통계를 배경 조건으로 붙이면 불투수면 증가와 첨두유출을 함께 볼 수 있습니다.
+      </p>
+    </section>
   </main>
 
   <footer class="site-footer">
     <div class="wrap">
-      <p>데이터 출처: 국가통계포털 KOSIS · <a href="https://kosis.kr" rel="noopener">kosis.kr</a></p>
+      <p>데이터 출처: 국가통계포털 KOSIS 「서울특별시기본통계」 · <a href="https://kosis.kr" rel="noopener">kosis.kr</a></p>
     </div>
   </footer>
 
