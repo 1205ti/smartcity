@@ -30,6 +30,47 @@ def norm(name):
     return re.sub(r"[·.,\s‧・]", "", str(name)).strip()
 
 
+def validate(cw, seoul, names):
+    """조인 결과를 검사하고 문제가 있으면 크게 알린다.
+
+    이름으로 잇는 방식은 두 자료가 같은 시점일 때만 안전하다.
+    행정동은 수시로 통폐합된다 — 동대문구 용신동은 용두동과 신설동이 합쳐진 것이고,
+    노원구 상계3·4동처럼 여러 동이 묶인 이름도 있다. 자료 연도가 어긋나면
+    한쪽에만 있는 동이 생겨 조용히 빠진다. 그걸 막으려고 양방향으로 검사한다.
+    """
+    problems = []
+
+    # 행 수가 변하면 키가 중복됐다는 뜻이다
+    if len(cw) != len(seoul):
+        problems.append(f"행 수 변화: 경계 {len(seoul)} → 조인 {len(cw)}. 키 중복 의심")
+
+    miss = cw["H_DNG_CD"].isna()
+    if miss.any():
+        rows = cw.loc[miss, ["SGG_NM_SGIS", "ADM_NM"]].to_string(index=False)
+        problems.append(f"경계에만 있는 동 {miss.sum()}개 (통계 미매칭):\n{rows}")
+
+    only_pop = set(names["key"]) - set(seoul["key"])
+    if only_pop:
+        problems.append(f"통계에만 있는 동 {len(only_pop)}개 (경계 미매칭): "
+                        f"{sorted(only_pop)}")
+
+    for col in ("SGIS_CD", "H_DNG_CD"):
+        src = cw["ADM_CD"] if col == "SGIS_CD" else cw["H_DNG_CD"]
+        d = src.dropna().duplicated().sum()
+        if d:
+            problems.append(f"{col} 중복 {d}건 — 1:1 대응이 깨졌다")
+
+    print(f"\n매칭 {(~miss).sum()}/{len(cw)}", flush=True)
+    if problems:
+        print("\n" + "!" * 60, flush=True)
+        print("조인에 문제가 있다. 두 자료의 기준 시점이 다를 수 있다.", flush=True)
+        for x in problems:
+            print(f"  - {x}", flush=True)
+        print("!" * 60, flush=True)
+        raise SystemExit(1)
+    print("검증 통과 — 1:1 대응, 양방향 누락 없음", flush=True)
+
+
 def main():
     t0 = time.time()
 
@@ -48,19 +89,16 @@ def main():
     names = pop[["H_DNG_CD", "SGG_NM", "ADMI_NM"]].drop_duplicates()
     print(f"생활인구 행정동 {len(names)}개", flush=True)
 
+    # 시군구는 두 체계가 1:1로 고정돼 있어(11010 ↔ 11110 종로구) 코드로 이어도 되지만,
+    # 동은 뒤 3자리가 33%만 일치해 규칙이 없다. 그래서 동은 이름으로 잇는다.
+    #
+    # 동명만으로 이으면 안 된다. 신사동이 강남구와 관악구 양쪽에 있다.
+    # 반드시 시군구를 함께 묶어야 한다.
     seoul["key"] = seoul["SGG_NM_SGIS"] + "|" + seoul["ADM_NM"].map(norm)
     names["key"] = names["SGG_NM"] + "|" + names["ADMI_NM"].map(norm)
 
     cw = seoul.merge(names, on="key", how="left")
-    miss = cw["H_DNG_CD"].isna()
-    print(f"\n매칭 {(~miss).sum()}/{len(cw)}  미매칭 {miss.sum()}", flush=True)
-    if miss.any():
-        print("경계에만 있는 동:", cw.loc[miss, ["SGG_NM_SGIS", "ADM_NM"]]
-              .to_string(index=False), flush=True)
-
-    only_pop = set(names["key"]) - set(seoul["key"])
-    if only_pop:
-        print("생활인구에만 있는 동:", sorted(only_pop), flush=True)
+    validate(cw, seoul, names)
 
     table = cw[["ADM_CD", "ADM_NM", "SGG_NM_SGIS", "H_DNG_CD"]].copy()
     table.columns = ["SGIS_CD", "DONG_NM", "SGG_NM", "H_DNG_CD"]
