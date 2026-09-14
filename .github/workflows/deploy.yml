@@ -21,14 +21,6 @@ jobs:
       - name: 저장소 체크아웃
         uses: actions/checkout@v4
 
-      - name: 시크릿 전달 확인 (값은 찍지 않고 길이만)
-        env:
-          TOK: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          ACC: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: |
-          echo "API_TOKEN 길이:  ${#TOK}"
-          echo "ACCOUNT_ID 길이: ${#ACC}"
-
       - name: Cloudflare Pages 배포
         uses: cloudflare/wrangler-action@v3
         with:

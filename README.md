@@ -53,6 +53,7 @@ public/
 ## 개발 환경
 
 - Python 가상환경: `.venv` (Python 3.12.13) — `source .venv/bin/activate`
+- 자동 배포: main 브랜치에 push하면 GitHub Actions가 Cloudflare Pages로 올립니다
 - Jupyter 커널: `Python 3.12 (smartcity)`
 - 주요 패키지: numpy, pandas, geopandas, scikit-learn, matplotlib(+koreanize_matplotlib),
   plotly, folium, pydeck, mapclassify, nbformat, ipywidgets, openpyxl, python-dotenv
