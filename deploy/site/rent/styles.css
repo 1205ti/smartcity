@@ -1,0 +1,123 @@
+/* 강의자료 지정: 밝은 배경 + 오렌지 포인트 */
+:root {
+  --bg: #fdfbf8;
+  --surface: #ffffff;
+  --border: #eee3d8;
+  --ink: #2b2420;
+  --ink-soft: #7a6a5e;
+  --accent: #e8590c;
+  --accent-soft: #fff2e8;
+  --radius: 12px;
+  --shadow: 0 1px 3px rgba(90, 60, 30, .07), 0 1px 2px rgba(90, 60, 30, .05);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+               "Pretendard", "Malgun Gothic", system-ui, sans-serif;
+  line-height: 1.6;
+}
+
+.wrap { width: 100%; max-width: 820px; margin: 0 auto; padding-inline: 20px; }
+
+header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding-block: clamp(28px, 6vw, 48px);
+}
+.eyebrow {
+  margin: 0 0 6px; font-size: .78rem; font-weight: 700;
+  letter-spacing: .06em; color: var(--accent);
+}
+h1 { margin: 0 0 8px; font-size: clamp(1.6rem, 5vw, 2.2rem); letter-spacing: -.02em; }
+.lede { margin: 0; color: var(--ink-soft); }
+
+main.wrap { padding-block: 26px 48px; display: grid; gap: 22px; }
+
+/* 선택 영역 */
+.picker {
+  display: grid; gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow);
+}
+.field { display: flex; flex-direction: column; gap: 6px; }
+label { font-size: .82rem; font-weight: 700; color: var(--ink-soft); }
+select {
+  font: inherit; font-size: .95rem;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--ink);
+  cursor: pointer;
+}
+select:focus { outline: none; border-color: var(--accent); }
+
+/* 결과 카드 */
+.result {
+  background: var(--accent-soft);
+  border: 1.5px solid #f6c9a8;
+  border-radius: var(--radius);
+  padding: 24px;
+  text-align: center;
+}
+.result .where { margin: 0 0 10px; font-size: .95rem; color: var(--ink-soft); }
+.result .price {
+  margin: 0; font-size: clamp(2rem, 8vw, 3rem); font-weight: 750;
+  letter-spacing: -.03em; color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+.result .unit { font-size: .5em; font-weight: 600; margin-left: 4px; }
+.result .meta { margin: 8px 0 0; font-size: .9rem; color: var(--ink-soft); }
+.result .warn {
+  margin: 12px auto 0; max-width: 34em;
+  font-size: .85rem; color: #9a3412;
+  background: #fff; border: 1px solid #f6c9a8; border-radius: 8px; padding: 8px 12px;
+}
+
+/* 비교·순위 */
+.compare, .rank {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow);
+}
+h2 { margin: 0 0 4px; font-size: 1rem; }
+.hint { margin: 0 0 14px; font-size: .82rem; color: var(--ink-soft); }
+
+.bar-row { display: grid; grid-template-columns: 7.5em 1fr 6.5em; gap: 10px;
+           align-items: center; padding: 5px 0; font-size: .9rem; }
+.bar-row .name { color: var(--ink-soft); white-space: nowrap;
+                 overflow: hidden; text-overflow: ellipsis; }
+.bar-track { display: block; background: #f5ece4; border-radius: 999px; height: 20px; overflow: hidden; }
+.bar-fill { display: block; background: var(--accent); height: 100%; border-radius: 999px;
+            min-width: 2px; transition: width .25s ease; }
+.bar-row.on .name { color: var(--ink); font-weight: 700; }
+.bar-row.on .bar-fill { background: #c2410c; }
+.bar-row .val { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink-soft); }
+.bar-row.on .val { color: var(--ink); font-weight: 700; }
+
+.empty { color: var(--ink-soft); font-size: .9rem; margin: 0; }
+
+footer {
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  padding-block: 20px;
+  font-size: .85rem; color: var(--ink-soft);
+}
+footer p { margin: 0 0 4px; }
+footer a { color: var(--accent); }
+.small { font-size: .8rem; }
+
+@media (max-width: 480px) {
+  .bar-row { grid-template-columns: 5.5em 1fr 5.5em; font-size: .82rem; }
+}

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>서울 전세가 조회</title>
+  <meta name="description" content="자치구·법정동·주택유형을 고르면 평균 전세가와 거래 건수를 보여줍니다" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <p class="eyebrow">서울 열린데이터광장 · 부동산 전월세가 정보</p>
+      <h1>서울 전세가 조회</h1>
+      <p class="lede">자치구와 동, 주택유형을 고르면 평균 전세가와 거래 건수를 보여줍니다.</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="picker" aria-label="조건 선택">
+      <div class="field">
+        <label for="gu">자치구</label>
+        <select id="gu"></select>
+      </div>
+      <div class="field">
+        <label for="dong">법정동</label>
+        <select id="dong"></select>
+      </div>
+      <div class="field">
+        <label for="usage">주택유형</label>
+        <select id="usage"></select>
+      </div>
+    </section>
+
+    <section class="result" id="result" aria-live="polite"></section>
+
+    <section class="compare">
+      <h2 id="compare-title">같은 동의 다른 주택유형</h2>
+      <div id="compare"></div>
+    </section>
+
+    <section class="rank">
+      <h2 id="rank-title">자치구 안에서의 위치</h2>
+      <p class="hint">거래 10건 이상인 동만 견줍니다. 한두 건짜리 평균은 시세가 아니라 그 거래 하나일 뿐입니다.</p>
+      <div id="rank"></div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <p>출처: 서울 열린데이터광장 「서울시 부동산 전월세가 정보」 ·
+        <a href="https://data.seoul.go.kr" rel="noopener">data.seoul.go.kr</a></p>
+      <p class="small">전세 거래만 집계한 값입니다. 단위는 만원.</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

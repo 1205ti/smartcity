@@ -297,7 +297,45 @@ print("중복 남았나:", gap_fixed["iso_alpha"].duplicated().any())
 print("\\n한국:")
 print(wg[wg["id"].isin(["KOR", "PRK"])][["id", "name", "country", "lifeExp", "gdpPercap"]])'''))
 
-c.append(("md", "## 5. 단계구분도"))
+c.append(("md", """## 5. Plotly choropleth — 같은 자료를 다른 도구로
+
+학습목표에 있는 항목이다. Folium과 비교하면 차이가 드러난다.
+Plotly는 국가 코드만 주면 경계를 알아서 그리고, Folium은 GeoJSON을 직접 준다."""))
+c.append(("code", '''fig = px.choropleth(
+    gap_fixed, locations="iso_alpha", color="gdpPercap",
+    hover_name="country", color_continuous_scale="Blues",
+    projection="natural earth",
+    labels={"gdpPercap": "1인당 GDP"},
+)
+fig.update_layout(title="국가별 1인당 GDP (2007) — Plotly",
+                  height=520, margin=dict(l=0, r=0, t=50, b=0))
+fig.write_html(HTML / "8_1.html", include_plotlyjs="cdn")
+fig.show()'''))
+
+c.append(("code", '''# 기대수명으로도 그려 비교한다. 색 방향이 GDP와 비슷하게 가는지 본다.
+fig = px.choropleth(
+    gap_fixed, locations="iso_alpha", color="lifeExp",
+    hover_name="country", color_continuous_scale="RdYlGn",
+    projection="natural earth",
+    labels={"lifeExp": "기대수명"},
+)
+fig.update_layout(title="국가별 기대수명 (2007) — Plotly",
+                  height=520, margin=dict(l=0, r=0, t=50, b=0))
+fig.write_html(HTML / "8_2.html", include_plotlyjs="cdn")
+fig.show()'''))
+
+c.append(("md", """**Plotly와 Folium 중 무엇을 쓸까**
+
+| | Plotly choropleth | Folium |
+| --- | --- | --- |
+| 경계 데이터 | 내장 (ISO 코드만 주면 됨) | 직접 준비해야 함 |
+| 배경 지도 | 없음 (투영법만 선택) | 실제 타일 지도 위에 얹음 |
+| 레이어 중첩 | 제한적 | 자유롭게 쌓음 |
+| 적합한 경우 | 국가 단위 빠른 확인 | 행정동처럼 자체 경계가 필요한 경우 |
+
+수업 후반 서울 행정동 분석에는 내장 경계가 없으므로 Folium 쪽이 맞다."""))
+
+c.append(("md", "## 6. Folium 단계구분도"))
 c.append(("code", '''geo = json.loads(wg.to_json())
 
 m = folium.Map(location=[20, 0], zoom_start=2, tiles="OpenStreetMap")
@@ -328,7 +366,7 @@ folium.GeoJson(
 m.save(HTML / "9_1.html")
 m'''))
 
-c.append(("md", """## 6. 중심점 레이어 얹기
+c.append(("md", """## 7. 중심점 레이어 얹기
 
 단계구분도 위에 원을 올려 두 변수를 한 지도에서 본다.
 색은 기대수명, 크기도 기대수명으로 이중 부호화해 읽기 쉽게 했다."""))

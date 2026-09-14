@@ -167,7 +167,45 @@ plt.show()'''))
 
 c.append(("md", """## 연습 문제
 
-대륙별 와인 평균과 연도별 UFO 목격 추이를 그린다."""))
+강의자료가 지정한 다섯 문제를 그대로 푼다.
+
+1. `wine` Histogram을 bins 10·20·40으로 비교
+2. `beer`–`spirit` Scatter에 `wine`을 크기·색으로 표현
+3. 대륙별 `wine` 평균 Bar
+4. 대륙별 `spirit` Box — 중앙값과 이상치 비교
+5. UFO 연도별 건수에 제목·축이름을 붙여 PNG 저장"""))
+
+c.append(("md", "### 1. wine Histogram — bins 10 / 20 / 40"))
+c.append(("code", '''fig, axes = plt.subplots(1, 3, figsize=(13, 3.6))
+for ax, b in zip(axes, [10, 20, 40]):
+    drinks["wine"].plot(kind="hist", bins=b, ax=ax, edgecolor="white", color="#8250df")
+    ax.set_title(f"bins={b}")
+    ax.set_xlabel("와인 소비량")
+fig.suptitle("와인 소비량 분포 — bins에 따른 차이")
+fig.tight_layout()
+fig.savefig(FIG / "ex1_wine_hist.png", dpi=120)
+plt.show()
+
+# bins가 적으면 0 근처에 몰린 것만 보이고, 많으면 중간 봉우리가 드러난다.
+print(drinks["wine"].describe().round(1).to_string())'''))
+
+c.append(("md", "### 2. beer–spirit Scatter, wine을 크기·색으로"))
+c.append(("code", '''fig, ax = plt.subplots(figsize=(8, 5))
+sc = ax.scatter(drinks["beer"], drinks["spirit"],
+                s=drinks["wine"] * 0.6 + 12,   # 크기 = 와인
+                c=drinks["wine"], cmap="plasma",
+                alpha=0.7, edgecolor="white", linewidth=0.5)
+ax.set_xlabel("맥주")
+ax.set_ylabel("증류주")
+ax.set_title("맥주와 증류주의 관계 (크기·색 = 와인)")
+fig.colorbar(sc, ax=ax, label="와인 소비량")
+fig.tight_layout()
+fig.savefig(FIG / "ex2_beer_spirit_wine.png", dpi=120)
+plt.show()
+
+print("상관계수 beer-spirit:", round(drinks["beer"].corr(drinks["spirit"]), 3))'''))
+
+c.append(("md", "### 3~4. 대륙별 wine 평균 Bar, spirit Box"))
 c.append(("code", '''fig, axes = plt.subplots(1, 2, figsize=(13, 4))
 
 drinks.groupby("continent")["wine"].mean().sort_values().plot(
@@ -175,14 +213,29 @@ drinks.groupby("continent")["wine"].mean().sort_values().plot(
 axes[0].set_title("대륙별 평균 와인 소비량")
 axes[0].set_xlabel("잔")
 
-yearly = ufo[ufo["Time"] >= "1970-01-01"].groupby(ufo["Time"].dt.year).size()
-yearly.plot(ax=axes[1], marker="o", markersize=3)
-axes[1].set_title("연도별 UFO 목격 건수")
-axes[1].set_xlabel("연도")
-axes[1].set_ylabel("건수")
-
+drinks.boxplot(column="spirit", by="continent", ax=axes[1])
+axes[1].set_title("대륙별 증류주 소비량")
+axes[1].set_xlabel("")
+plt.suptitle("")
 fig.tight_layout()
-fig.savefig(FIG / "5_2.png", dpi=120)
+fig.savefig(FIG / "ex3_4_wine_spirit.png", dpi=120)
+plt.show()
+
+# Box plot은 중앙값(가운데 선)과 이상치(점)를 같이 보여 준다
+print("대륙별 증류주 중앙값:")
+print(drinks.groupby("continent")["spirit"].median().round(1).to_string())'''))
+
+c.append(("md", "### 5. UFO 연도별 — 제목·축이름을 붙여 저장"))
+c.append(("code", '''yearly = ufo[ufo["Time"] >= "1970-01-01"].groupby(ufo["Time"].dt.year).size()
+
+fig, ax = plt.subplots(figsize=(11, 4))
+yearly.plot(ax=ax, marker="o", markersize=3, linewidth=1.5)
+ax.set_title("연도별 UFO 목격 신고 건수 (1970년 이후)")
+ax.set_xlabel("연도")
+ax.set_ylabel("신고 건수")
+ax.grid(alpha=0.3)
+fig.tight_layout()
+fig.savefig(FIG / "ex5_ufo_yearly.png", dpi=120)
 plt.show()
 
 print("저장된 그림:", sorted(p.name for p in FIG.glob("*.png")))'''))

@@ -167,3 +167,7 @@ tbody tr:last-child td { border-bottom: none; }
 .metric-note { margin: 10px 0 0; font-size: .85rem; color: var(--ink-soft); }
 .metric-note:empty { display: none; }
 .series-bar { fill: var(--accent); }
+
+.apps ul { margin: 0; padding-left: 18px; color: var(--ink-soft); font-size: .92rem; }
+.apps li { margin-bottom: 4px; }
+.apps a { color: var(--accent); font-weight: 600; }
