@@ -1,0 +1,30 @@
+# 이 프로젝트가 직접 쓰는 것만 적는다. 의존성으로 딸려오는 것(shapely, branca 등)은 생략.
+# 설치:  python -m venv .venv && .venv/bin/python -m pip install -r requirements.txt
+#
+# Python 3.12 이상. 시스템 python(3.9)은 pandas 3.x·geopandas가 맞지 않는다.
+
+# 데이터
+numpy
+pandas
+geopandas
+scikit-learn
+openpyxl
+
+# 시각화
+matplotlib
+koreanize_matplotlib
+plotly
+folium
+pydeck
+mapclassify
+
+# 노트북
+ipykernel
+nbformat
+ipywidgets
+nbclient          # scripts/run_notebooks.py 로 노트북 실행 검증
+
+# 기타
+requests          # 서울 열린데이터광장 OpenAPI 호출
+python-dotenv     # .env 에서 API 키 읽기
+setuptools        # Python 3.12에서 빠진 distutils shim

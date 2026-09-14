@@ -1,7 +1,7 @@
 # 프로젝트 상태
 
 현재 진행 상황과 결정 사항. 규칙은 `CLAUDE.md`, 시간순 기록은 `logs/WORKLOG.md`.
-최종 갱신: 2026-09-14
+최종 갱신: 2026-09-14 (서울 데이터 3종 확보, 폴더 구조 정리)
 
 ## 지금 하는 일
 
@@ -18,6 +18,7 @@
 | 06 Matplotlib | `06_matplotlib.ipynb` | 12 | PNG 11개 |
 | 07 Plotly | `07_plotly.ipynb` | 11 | HTML 11개, 전세 환산 과제 포함 |
 | 08 Folium | `08_folium.ipynb` | 10 | HTML 2개, 조인 진단 |
+| 13 생활인구 | `13_living_population.ipynb` | 10 | 노션 자료 없이 선구현 |
 
 검증은 `scripts/run_notebooks.py`로 nbclient 실행. 산출물은 `outputs/`(git 제외).
 
@@ -25,18 +26,10 @@
 
 제가 대신 할 수 없는 것만 모았다.
 
-### 1. 서울 열린데이터광장 API 키 — 05 강의 (선택)
+### 1. ~~서울 열린데이터광장 API 키~~ — 완료 (2026-09-14)
 
-**지금 당장은 없어도 된다.** 수집 결과 CSV가 이미 있어서 05 실습의 대부분은 키 없이 돌아간다.
-직접 수집 과정을 실행해 보려면 필요하다.
-
-1. https://data.seoul.go.kr 회원가입·로그인
-2. "서울시 부동산 전월세가 정보" 검색 → OpenAPI 신청 (용도: 교육·연구)
-3. 마이페이지 > 인증키 관리에서 키 확인
-4. 프로젝트 루트 `.env`에 아래 한 줄 추가 (`.env`는 git에서 제외돼 있다)
-   ```
-   SEOUL_API_KEY=발급받은_키
-   ```
+발급받아 `.env`에 넣었고 두 데이터셋 모두 정상 응답(`INFO-000`) 확인.
+**인증키는 계정당 하나**로 모든 데이터셋에 쓴다. 데이터셋별 신청이 아니다.
 
 ### 2. 강사에게 확인할 것
 
@@ -61,17 +54,35 @@
 
 ## 확보한 데이터
 
-`data/raw/` (git 제외, 69MB)
+### `data/raw/` — 원본 (git 제외, 1.1GB)
 
 | 파일 | 크기 | 출처 | 쓰는 곳 |
 | --- | --- | --- | --- |
+| `SPOP_2025_ADM.csv` | 853MB | 서울 열린데이터광장 (2025년 전체) | 13 |
+| `bnd_all_00_2025_2Q.zip` | 181MB | 통계청 행정구역 경계 | 13 |
+| `seoul_rent_2026.csv` | 57MB | **API로 직접 수집** (416,037건, 8.7분) | 05, 07 |
 | `nycflights13.csv` | 19MB | 실습 저장소 | 04 |
-| `seoul_rent_2026.csv` | 50MB | 실습 저장소 (원래는 서울 OpenAPI 수집물) | 05, 07 |
-| `jeonse_mean.csv` | 54KB | 실습 저장소 | 05 |
 | `world-countries.geojson` | 247KB | folium 공식 저장소 예제 | 08 |
-| `world-centroids.geojson` | 생성 | `representative_point()`로 직접 생성 | 08 |
+| `world-centroids.geojson` | 28KB | `representative_point()`로 생성 | 08 |
 
-URL에서 직접 읽는 것(내려받지 않음): `drinks.csv`, `ufo.csv` (06), `px.data.gapminder()` (07·08)
+### `data/processed/` — 분석용 (커밋)
+
+| 파일 | 내용 |
+| --- | --- |
+| `living_pop_daily.csv` | 일자 x 행정동 (155,490행) |
+| `living_pop_hourly.csv` | 시간대 x 행정동 (10,224행) |
+| `living_pop_age_gender.csv` | 행정동 x 성·연령 (426행) |
+| `seoul_dong_simplified.geojson` | 행정동 경계 426개, 0.9MB |
+| `dong_crosswalk.csv` | 통계청 ↔ 서울 행정동 코드 대응표 |
+| `jeonse_mean.csv` | 자치구·법정동·용도별 평균 전세가 (1,194행) |
+
+URL에서 직접 읽는 것: `drinks.csv`, `ufo.csv` (06), `px.data.gapminder()` (07·08)
+
+### 행정동 코드 주의
+
+통계청 경계와 서울 생활인구의 코드 체계가 다르다. 426개 중 32개만 우연히 일치한다.
+`dong_crosswalk.csv`를 쓰거나, 이미 코드가 붙어 있는 `seoul_dong_simplified.geojson`을 쓴다.
+새 데이터를 붙일 때 조인 전후 행 수를 반드시 확인할 것.
 
 ## 열려 있는 문제
 
