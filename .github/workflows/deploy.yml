@@ -1,0 +1,30 @@
+# main 브랜치에 push하면 Cloudflare Pages로 자동 배포한다.
+# 배포 대상: https://smartcity-apa.pages.dev (Direct Upload 프로젝트 "smartcity")
+#
+# 필요한 저장소 시크릿 2개 (Settings → Secrets and variables → Actions):
+#   CLOUDFLARE_API_TOKEN   Cloudflare 대시보드에서 발급한 API 토큰
+#   CLOUDFLARE_ACCOUNT_ID  Cloudflare 계정 ID
+name: Deploy to Cloudflare Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:        # Actions 탭에서 수동 실행도 가능하게 둔다
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - name: 저장소 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Cloudflare Pages 배포
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # public/ 폴더의 정적 파일을 그대로 올린다. 빌드 과정은 없다.
+          command: pages deploy public --project-name=smartcity
